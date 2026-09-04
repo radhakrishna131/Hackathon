@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+// 1. UPDATE IMPORT: Point this to your standard Supabase client file (e.g., lib/supabase.ts)
+import { supabase } from "@/lib/supabase"; 
 
 export type AppRole = "admin" | "trainer" | "trainee";
 
@@ -38,45 +39,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       return;
     }
-    const [{ data: p }, { data: r }] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", uid),
-    ]);
-    setProfile((p as Profile) ?? null);
-    const roles = (r ?? []).map((x) => x.role as AppRole);
-    setRole(
-      roles.includes("admin")
-        ? "admin"
-        : roles.includes("trainer")
-          ? "trainer"
-          : roles.includes("trainee")
-            ? "trainee"
-            : null,
-    );
+
+    try {
+      // 2. ADD ERROR HANDLING: Normal production apps need to catch standard Supabase errors
+      const [profileResponse, rolesResponse] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", uid),
+      ]);
+
+      if (profileResponse.error) console.error("Error loading profile:", profileResponse.error);
+      if (rolesResponse.error) console.error("Error loading roles:", rolesResponse.error);
+
+      setProfile((profileResponse.data as Profile) ?? null);
+
+      const roles = (rolesResponse.data ?? []).map((x) => x.role as AppRole);
+      
+      // 3. ROLE LOGIC: Keep highest privilege
+      setRole(
+        roles.includes("admin")
+          ? "admin"
+          : roles.includes("trainer")
+            ? "trainer"
+            : roles.includes("trainee")
+              ? "trainee"
+              : null,
+      );
+    } catch (error) {
+      console.error("Unexpected error loading user data:", error);
+    }
   };
 
   useEffect(() => {
-    let active = true;
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      await load(data.session?.user.id);
+    let mounted = true;
+
+    // Get initial session
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (!mounted) return;
+      if (error) console.error("Error getting session:", error);
+      
+      setSession(session);
+      await load(session?.user.id);
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
-      setSession(s);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!mounted) return;
+      
+      setSession(currentSession);
+      
       if (event === "SIGNED_OUT") {
         setProfile(null);
         setRole(null);
-        return;
+      } else if (currentSession?.user.id) {
+        await load(currentSession.user.id);
       }
-      if (s?.user.id) void load(s.user.id);
     });
 
     return () => {
-      active = false;
-      sub.subscription.unsubscribe();
+      mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -86,11 +108,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     role,
     loading,
-    refresh: () => load(session?.user.id),
+    refresh: async () => {
+      if (session?.user.id) await load(session.user.id);
+    },
     signOut: async () => {
       await supabase.auth.signOut();
       setProfile(null);
       setRole(null);
+      setSession(null); // Ensure session is explicitly cleared on standard apps
     },
   };
 
@@ -98,7 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
-  return ctx;
+  const context = useContext(AuthContext);
+  if (context === undefined || context === null) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }
