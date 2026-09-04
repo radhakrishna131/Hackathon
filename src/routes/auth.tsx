@@ -3,14 +3,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Waves, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -51,10 +50,9 @@ function AuthPage() {
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = z.object({ email: emailSchema, password: z.string().min(1) }).safeParse({
-      email,
-      password,
-    });
+    const parsed = z
+      .object({ email: emailSchema, password: z.string().min(1) })
+      .safeParse({ email, password });
     if (!parsed.success) { toast.error(parsed.error.issues[0]!.message); return; }
 
     setBusy(true);
@@ -87,7 +85,8 @@ function AuthPage() {
 
     if (error) {
       setBusy(false);
-      { toast.error(error.message); return; }
+      toast.error(error.message);
+      return;
     }
 
     if (data.session && data.user) {
@@ -101,14 +100,15 @@ function AuthPage() {
     toast.success("Check your inbox to confirm your email, then sign in.");
   };
 
-
   const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
     });
-    if (result.error) { toast.error("Google sign-in failed"); return; }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    if (error) { toast.error("Google sign-in failed"); return; }
+    // OAuth redirects the browser automatically — no navigate() needed
   };
 
   const forgot = async () => {
