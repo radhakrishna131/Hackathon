@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const GATEWAY = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-const MODEL = "gemini-2.0-flash";
+const MODEL = "gemini-2.5-flash";
 
 type Msg = { role: "system" | "user" | "assistant"; content: string };
 
