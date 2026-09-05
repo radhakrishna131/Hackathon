@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoleGuard } from "@/components/RoleGate";
+import { CourseBuilder } from "@/components/CourseBuilder";
 import { useAuth } from "@/lib/auth";
 import { generateQuiz } from "@/lib/ai.functions";
 
@@ -276,7 +277,8 @@ function ManageCourses() {
                       progress
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <CourseBuilder courseId={c.id} courseTitle={c.title} />
                     <Link to="/courses/$slug" params={{ slug: c.slug }}>
                       <Button variant="outline" size="sm">
                         View
