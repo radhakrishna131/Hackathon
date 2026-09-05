@@ -209,16 +209,30 @@ function CourseDetail() {
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm font-medium">{l.title}</p>
                                   <p className="mt-1 text-xs text-muted-foreground">{l.content}</p>
-                                  <div className="mt-2 flex gap-3 text-[11px] text-muted-foreground">
+                                  <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
                                     <span className="flex items-center gap-1">
                                       <Clock className="size-3" /> {l.duration_min} min
                                     </span>
-                                    <span className="flex items-center gap-1">
-                                      <PlayCircle className="size-3" /> Video lesson
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <FileText className="size-3" /> PDF resource
-                                    </span>
+                                    {l.video_url && (
+                                      <a
+                                        href={l.video_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-foreground flex items-center gap-1 font-medium underline underline-offset-2"
+                                      >
+                                        <PlayCircle className="size-3" /> Watch video
+                                      </a>
+                                    )}
+                                    {l.resource_url && (
+                                      <a
+                                        href={l.resource_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-foreground flex items-center gap-1 font-medium underline underline-offset-2"
+                                      >
+                                        <FileText className="size-3" /> Open PDF resource
+                                      </a>
+                                    )}
                                   </div>
                                 </div>
                               </div>
