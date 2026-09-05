@@ -20,7 +20,6 @@ Capacity Connect is a full-stack learning management system built to digitise an
 | Backend | PostgreSQL via Lovable Cloud, Row-Level Security |
 | Auth | Email/password + Google OAuth, JWT sessions, HIBP leaked-password checks |
 | AI | Google Gemini 3.7 Flash via AI Gateway — assistant, recommendations, quiz generation |
-| Charts | Recharts |
 | Icons | Lucide React |
 | Notifications | Sonner |
 | Validation | Zod (all forms and server functions) |
