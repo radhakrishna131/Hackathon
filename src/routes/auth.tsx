@@ -4,7 +4,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Waves, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,14 +100,29 @@ function AuthPage() {
     toast.success("Check your inbox to confirm your email, then sign in.");
   };
 
-
   const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) { toast.error("Google sign-in failed"); return; }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) {
+        toast.error(`Google sign-in failed: ${error.message}`);
+        setBusy(false);
+        return;
+      }
+
+      // OAuth will redirect the user, so we don't need to do anything else
+      // The session will be established on the callback
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred";
+      toast.error(`Google sign-in error: ${message}`);
+      setBusy(false);
+    }
   };
 
   const forgot = async () => {
@@ -247,7 +261,8 @@ function AuthPage() {
             <span className="h-px flex-1 bg-border" />
           </div>
 
-          <Button variant="outline" className="w-full gap-2" onClick={google}>
+          <Button variant="outline" className="w-full gap-2" onClick={google} disabled={busy}>
+            {busy && <Loader2 className="mr-2 size-4 animate-spin" />}
             <svg viewBox="0 0 48 48" aria-hidden="true" className="size-4">
               <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2.5 24 .5 14.6.5 6.5 5.9 2.6 13.8l7.8 6.1C12.3 13.9 17.6 9.5 24 9.5z" />
               <path fill="#4285F4" d="M46.5 24.5c0-1.6-.15-3.2-.44-4.7H24v9h12.7c-.55 3-2.2 5.5-4.7 7.2l7.3 5.6c4.3-4 6.8-9.9 6.8-17.1z" />
