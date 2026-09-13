@@ -19,6 +19,7 @@ import { Route as AuthenticatedAssistantRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCertificatesRouteImport } from './routes/_authenticated/certificates'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedManageCoursesRouteImport } from './routes/_authenticated/manage-courses'
+import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedMyLearningRouteImport } from './routes/_authenticated/my-learning'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
@@ -77,6 +78,11 @@ const AuthenticatedManageCoursesRoute =
     path: '/manage-courses',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLeaderboardRoute = AuthenticatedLeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMyLearningRoute = AuthenticatedMyLearningRouteImport.update({
   id: '/my-learning',
   path: '/my-learning',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/certificates': typeof AuthenticatedCertificatesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/manage-courses': typeof AuthenticatedManageCoursesRoute
+  '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/my-learning': typeof AuthenticatedMyLearningRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/certificates': typeof AuthenticatedCertificatesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/manage-courses': typeof AuthenticatedManageCoursesRoute
+  '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/my-learning': typeof AuthenticatedMyLearningRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated/certificates': typeof AuthenticatedCertificatesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/manage-courses': typeof AuthenticatedManageCoursesRoute
+  '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/my-learning': typeof AuthenticatedMyLearningRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/certificates'
     | '/dashboard'
     | '/manage-courses'
+    | '/leaderboard'
     | '/my-learning'
     | '/profile'
     | '/users'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/certificates'
     | '/dashboard'
     | '/manage-courses'
+    | '/leaderboard'
     | '/my-learning'
     | '/profile'
     | '/users'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/certificates'
     | '/_authenticated/dashboard'
     | '/_authenticated/manage-courses'
+    | '/_authenticated/leaderboard'
     | '/_authenticated/my-learning'
     | '/_authenticated/profile'
     | '/_authenticated/users'
@@ -291,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/leaderboard': {
+      id: '/_authenticated/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof AuthenticatedLeaderboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/manage-courses': {
       id: '/_authenticated/manage-courses'
       path: '/manage-courses'
@@ -350,6 +369,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCertificatesRoute: typeof AuthenticatedCertificatesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedManageCoursesRoute: typeof AuthenticatedManageCoursesRoute
+  AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
   AuthenticatedMyLearningRoute: typeof AuthenticatedMyLearningRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
@@ -365,6 +385,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCertificatesRoute: AuthenticatedCertificatesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedManageCoursesRoute: AuthenticatedManageCoursesRoute,
+  AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
   AuthenticatedMyLearningRoute: AuthenticatedMyLearningRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,

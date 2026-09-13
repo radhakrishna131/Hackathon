@@ -12,7 +12,7 @@ import {
   Sparkles,
   Gauge,
   Route as RouteIcon,
-
+  Trophy,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
@@ -24,7 +24,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { fetchCourses, fetchMyEnrollments } from "@/lib/queries";
 import { fetchMySkills, fetchMyRoadmap, band, BAND_LABEL } from "@/lib/skills";
-
+import {
+  fetchLearningLeaderboard,
+  fetchLearningPointSummary,
+  fetchLeagueRecommendation,
+} from "@/lib/learning-league";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -32,7 +36,10 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       { title: "Dashboard — Capacity Connect" },
       { name: "description", content: "Your personalised MoES capacity building dashboard." },
       { property: "og:title", content: "Dashboard — Capacity Connect" },
-      { property: "og:description", content: "Your personalised MoES capacity building dashboard." },
+      {
+        property: "og:description",
+        content: "Your personalised MoES capacity building dashboard.",
+      },
     ],
   }),
   component: Dashboard,
@@ -54,7 +61,10 @@ function Dashboard() {
         count("courses"),
         count("enrollments"),
         count("certificates"),
-        supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "trainer"),
+        supabase
+          .from("user_roles")
+          .select("id", { count: "exact", head: true })
+          .eq("role", "trainer"),
       ]);
       return {
         users: users.count ?? 0,
@@ -85,30 +95,53 @@ function Dashboard() {
     enabled: !!user,
     queryFn: () => fetchMyRoadmap(user!.id),
   });
+  const { data: league } = useQuery({
+    queryKey: ["learning-league", "overall"],
+    enabled: !!user,
+    queryFn: () => fetchLearningLeaderboard("overall"),
+  });
+  const { data: pointSummary } = useQuery({
+    queryKey: ["learning-points", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchLearningPointSummary(user!.id),
+  });
+  const { data: leagueRecommendation } = useQuery({
+    queryKey: ["league-recommendation", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchLeagueRecommendation(user!.id),
+  });
 
   const overallSkill = mySkills.length
     ? Math.round(mySkills.reduce((s, k) => s + k.score, 0) / mySkills.length)
     : 0;
   const weakSkills = [...mySkills].sort((a, b) => a.score - b.score).slice(0, 3);
-  const roadmapItems = ((roadmap?.roadmap_items ?? []) as {
-    id: string;
-    status: string;
-    reason: string;
-    position: number;
-    courses: { title: string; slug: string; category: string } | null;
-  }[]).sort((a, b) => a.position - b.position);
-  const nextStep = roadmapItems.find((i) => i.status === "recommended" || i.status === "in_progress");
-
-
+  const roadmapItems = (
+    (roadmap?.roadmap_items ?? []) as {
+      id: string;
+      status: string;
+      reason: string;
+      position: number;
+      courses: { title: string; slug: string; category: string } | null;
+    }[]
+  ).sort((a, b) => a.position - b.position);
+  const nextStep = roadmapItems.find(
+    (i) => i.status === "recommended" || i.status === "in_progress",
+  );
 
   const enrolledIds = new Set(enrollments.map((e) => e.course_id));
   const recommended = courses.filter((c) => !enrolledIds.has(c.id)).slice(0, 3);
   const learningHours = enrollments.reduce(
-    (sum, e) => sum + ((e.courses as { duration_hours: number } | null)?.duration_hours ?? 0) * (e.progress / 100),
+    (sum, e) =>
+      sum +
+      ((e.courses as { duration_hours: number } | null)?.duration_hours ?? 0) * (e.progress / 100),
     0,
   );
 
   const firstName = (profile?.full_name || "there").split(" ")[0];
+  const myLeague = league?.find((entry) => entry.is_current_user);
+  const aboveMe = myLeague ? league?.find((entry) => entry.rank === myLeague.rank - 1) : undefined;
+  const rankGap =
+    myLeague && aboveMe ? Math.max(0, aboveMe.total_points - myLeague.total_points) : null;
 
   return (
     <AppShell title={`Good day, ${firstName}`} breadcrumb="Home / Dashboard">
@@ -118,21 +151,36 @@ function Dashboard() {
             {role === "admin" ? "Institution overview" : "Programme overview"}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <StatCard icon={Users} label="Total users" value={stats?.users ?? 0} loading={isLoading} />
+            <StatCard
+              icon={Users}
+              label="Total users"
+              value={stats?.users ?? 0}
+              loading={isLoading}
+            />
             <StatCard
               icon={UserCheck}
               label="Trainers"
               value={stats?.trainers ?? 0}
               loading={isLoading}
             />
-            <StatCard icon={BookOpen} label="Courses" value={stats?.courses ?? 0} loading={isLoading} />
+            <StatCard
+              icon={BookOpen}
+              label="Courses"
+              value={stats?.courses ?? 0}
+              loading={isLoading}
+            />
             <StatCard
               icon={GraduationCap}
               label="Enrolments"
               value={stats?.enrolments ?? 0}
               loading={isLoading}
             />
-            <StatCard icon={Award} label="Certificates" value={stats?.certs ?? 0} loading={isLoading} />
+            <StatCard
+              icon={Award}
+              label="Certificates"
+              value={stats?.certs ?? 0}
+              loading={isLoading}
+            />
           </div>
         </section>
       )}
@@ -192,6 +240,58 @@ function Dashboard() {
         </div>
 
         <div className="space-y-6">
+          <div className="surface-card p-5">
+            <div className="flex items-center gap-2">
+              <Trophy className="text-accent size-4" />
+              <h3 className="text-sm font-semibold">Learning League</h3>
+            </div>
+            {myLeague ? (
+              <>
+                <div className="mt-3 flex items-baseline justify-between">
+                  <span className="font-display text-2xl font-bold">#{myLeague.rank}</span>
+                  <span className="text-sm font-semibold">
+                    {pointSummary?.total ?? myLeague.total_points} LP
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {myLeague.league} League · {pointSummary?.monthly ?? 0} LP earned this month
+                </p>
+                {rankGap !== null && (
+                  <p className="mt-3 text-sm">
+                    <span className="font-semibold">
+                      {rankGap} LP to Rank #{aboveMe?.rank}.
+                    </span>{" "}
+                    Keep building your skills.
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Complete a meaningful learning activity to enter the rankings.
+              </p>
+            )}
+            <Link to="/leaderboard">
+              <Button variant="outline" size="sm" className="mt-4 w-full">
+                View leaderboard
+              </Button>
+            </Link>
+          </div>
+
+          {leagueRecommendation && (
+            <div className="surface-card p-5">
+              <h3 className="text-sm font-semibold">Your next opportunity</h3>
+              <p className="mt-3 text-sm font-medium">{leagueRecommendation.title}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {leagueRecommendation.label} · potential +{leagueRecommendation.points} LP
+              </p>
+              <Link to="/courses/$slug" params={{ slug: leagueRecommendation.slug }}>
+                <Button variant="ghost" size="sm" className="mt-3 w-full">
+                  Continue learning
+                </Button>
+              </Link>
+            </div>
+          )}
+
           <div className="surface-card p-5">
             <div className="flex items-center gap-2">
               <Gauge className="text-primary size-4" />
@@ -272,7 +372,6 @@ function Dashboard() {
               </>
             )}
           </div>
-
 
           <div className="surface-card p-5">
             <h3 className="text-sm font-semibold">Your snapshot</h3>

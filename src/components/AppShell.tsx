@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   Gauge,
   Route as RouteIcon,
-
+  Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -36,12 +36,38 @@ const NAV: NavItem[] = [
     icon: LayoutDashboard,
     roles: ["admin", "trainer", "trainee"],
   },
-  { to: "/courses", label: "Course Catalog", icon: BookOpen, roles: ["admin", "trainer", "trainee"] },
+  {
+    to: "/courses",
+    label: "Course Catalog",
+    icon: BookOpen,
+    roles: ["admin", "trainer", "trainee"],
+  },
   { to: "/my-learning", label: "My Learning", icon: GraduationCap, roles: ["trainee", "admin"] },
   { to: "/skills", label: "Skill Profile", icon: Gauge, roles: ["admin", "trainer", "trainee"] },
-  { to: "/roadmap", label: "Learning Roadmap", icon: RouteIcon, roles: ["admin", "trainer", "trainee"] },
-  { to: "/certificates", label: "Certificates", icon: Award, roles: ["trainee", "admin", "trainer"] },
-  { to: "/assistant", label: "Sankalp AI Tutor", icon: Sparkles, roles: ["admin", "trainer", "trainee"] },
+  {
+    to: "/roadmap",
+    label: "Learning Roadmap",
+    icon: RouteIcon,
+    roles: ["admin", "trainer", "trainee"],
+  },
+  {
+    to: "/leaderboard",
+    label: "Learning League",
+    icon: Trophy,
+    roles: ["admin", "trainer", "trainee"],
+  },
+  {
+    to: "/certificates",
+    label: "Certificates",
+    icon: Award,
+    roles: ["trainee", "admin", "trainer"],
+  },
+  {
+    to: "/assistant",
+    label: "Sankalp AI Tutor",
+    icon: Sparkles,
+    roles: ["admin", "trainer", "trainee"],
+  },
   { to: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin", "trainer"] },
 
   { to: "/manage-courses", label: "Manage Courses", icon: ScrollText, roles: ["admin", "trainer"] },
@@ -87,8 +113,12 @@ function Brand() {
         <Waves className="size-5" />
       </span>
       <span className="leading-tight">
-        <span className="block font-display text-sm font-bold text-sidebar-foreground">CAPACITY CONNECT</span>
-        <span className="block text-[11px] text-sidebar-foreground/60">Ministry of Earth Sciences</span>
+        <span className="block font-display text-sm font-bold text-sidebar-foreground">
+          CAPACITY CONNECT
+        </span>
+        <span className="block text-[11px] text-sidebar-foreground/60">
+          Ministry of Earth Sciences
+        </span>
       </span>
     </Link>
   );
@@ -124,7 +154,9 @@ export function AppShell({
         </div>
         <NavLinks />
         <div className="mt-auto rounded-xl bg-sidebar-primary p-3">
-          <p className="text-xs font-semibold text-sidebar-primary-foreground">SIH 2026 · SIH26075</p>
+          <p className="text-xs font-semibold text-sidebar-primary-foreground">
+            SIH 2026 · SIH26075
+          </p>
           <p className="mt-1 text-[11px] text-sidebar-primary-foreground/75">
             Digital capacity building for earth-system professionals.
           </p>
