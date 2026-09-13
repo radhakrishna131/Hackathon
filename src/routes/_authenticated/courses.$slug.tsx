@@ -1,7 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Clock, FileText, PlayCircle, Award, Layers } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  Clock,
+  FileText,
+  PlayCircle,
+  Award,
+  Layers,
+  Gauge,
+  Sparkles,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +21,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { recomputeProgress } from "@/lib/queries";
+import { fetchCourseSkills, fetchMySkills, band, BAND_LABEL } from "@/lib/skills";
+
 
 export const Route = createFileRoute("/_authenticated/courses/$slug")({
   head: () => ({
@@ -83,6 +95,20 @@ function CourseDetail() {
       return (data ?? []).map((d) => d.lesson_id);
     },
   });
+
+  const { data: courseSkills = [] } = useQuery({
+    queryKey: ["course-skills", course?.id],
+    enabled: !!course,
+    queryFn: () => fetchCourseSkills(course!.id),
+  });
+
+  const { data: mySkills = [] } = useQuery({
+    queryKey: ["my-skills", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchMySkills(user!.id),
+  });
+
+
 
   if (isLoading) {
     return (
@@ -277,6 +303,50 @@ function CourseDetail() {
               </>
             )}
           </div>
+
+          {courseSkills.length > 0 && (
+            <div className="surface-card p-6">
+              <div className="flex items-center gap-2">
+                <Gauge className="text-primary size-4" />
+                <p className="text-sm font-semibold">Skill coverage</p>
+              </div>
+              <ul className="mt-4 space-y-4">
+                {courseSkills.map((cs) => {
+                  const mine = mySkills.find((m) => m.skill_id === cs.skill_id);
+                  const score = mine?.score ?? 0;
+                  return (
+                    <li key={cs.id}>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{cs.skills?.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {mine ? `${score}% · ${BAND_LABEL[band(score)]}` : "not measured"}
+                        </span>
+                      </div>
+                      <Progress value={score} className="mt-2 h-1.5" />
+                      <p className="mt-1 text-[11px] text-muted-foreground capitalize">
+                        {cs.importance} importance
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="mt-4 flex flex-col gap-2">
+                <Link to="/assistant">
+                  <Button variant="outline" size="sm" className="w-full">
+                    <Sparkles className="mr-1.5 size-3.5" /> Ask Sankalp AI Tutor
+                  </Button>
+                </Link>
+                {mySkills.length === 0 && (
+                  <Link to="/assessment/skill">
+                    <Button variant="ghost" size="sm" className="w-full">
+                      Measure my competency
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+
 
           {assessment && (
             <div className="surface-card p-6">

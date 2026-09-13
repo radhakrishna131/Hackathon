@@ -10,6 +10,9 @@ import {
   Clock,
   ArrowRight,
   Sparkles,
+  Gauge,
+  Route as RouteIcon,
+
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
@@ -20,6 +23,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { fetchCourses, fetchMyEnrollments } from "@/lib/queries";
+import { fetchMySkills, fetchMyRoadmap, band, BAND_LABEL } from "@/lib/skills";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -68,6 +73,33 @@ function Dashboard() {
   });
 
   const { data: courses = [] } = useQuery({ queryKey: ["courses"], queryFn: fetchCourses });
+
+  const { data: mySkills = [] } = useQuery({
+    queryKey: ["my-skills", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchMySkills(user!.id),
+  });
+
+  const { data: roadmap } = useQuery({
+    queryKey: ["roadmap", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchMyRoadmap(user!.id),
+  });
+
+  const overallSkill = mySkills.length
+    ? Math.round(mySkills.reduce((s, k) => s + k.score, 0) / mySkills.length)
+    : 0;
+  const weakSkills = [...mySkills].sort((a, b) => a.score - b.score).slice(0, 3);
+  const roadmapItems = ((roadmap?.roadmap_items ?? []) as {
+    id: string;
+    status: string;
+    reason: string;
+    position: number;
+    courses: { title: string; slug: string; category: string } | null;
+  }[]).sort((a, b) => a.position - b.position);
+  const nextStep = roadmapItems.find((i) => i.status === "recommended" || i.status === "in_progress");
+
+
 
   const enrolledIds = new Set(enrollments.map((e) => e.course_id));
   const recommended = courses.filter((c) => !enrolledIds.has(c.id)).slice(0, 3);
@@ -160,6 +192,88 @@ function Dashboard() {
         </div>
 
         <div className="space-y-6">
+          <div className="surface-card p-5">
+            <div className="flex items-center gap-2">
+              <Gauge className="text-primary size-4" />
+              <h3 className="text-sm font-semibold">Your competency</h3>
+            </div>
+            {mySkills.length === 0 ? (
+              <>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Take the skill assessment to measure your competencies and unlock a personalised
+                  roadmap.
+                </p>
+                <Link to="/assessment/skill">
+                  <Button size="sm" className="mt-4 w-full">
+                    Start skill assessment
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <div className="mt-3 flex items-baseline gap-2">
+                  <span className="font-display text-2xl font-bold">{overallSkill}%</span>
+                  <Badge variant="secondary">{BAND_LABEL[band(overallSkill)]}</Badge>
+                </div>
+                <Progress value={overallSkill} className="mt-3 h-2" />
+                <p className="mt-4 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                  Skill gaps
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {weakSkills.map((s) => (
+                    <li key={s.skill_id} className="flex items-center justify-between text-sm">
+                      <span>{s.skills?.name}</span>
+                      <Badge variant={band(s.score) === "attention" ? "destructive" : "outline"}>
+                        {s.score}%
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/skills">
+                  <Button variant="outline" size="sm" className="mt-4 w-full">
+                    View skill profile
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
+
+          <div className="surface-card p-5">
+            <div className="flex items-center gap-2">
+              <RouteIcon className="text-accent size-4" />
+              <h3 className="text-sm font-semibold">Recommended next step</h3>
+            </div>
+            {nextStep?.courses ? (
+              <>
+                <Link
+                  to="/courses/$slug"
+                  params={{ slug: nextStep.courses.slug }}
+                  className="mt-3 block rounded-lg border border-border p-3 transition-colors hover:bg-secondary"
+                >
+                  <p className="text-sm font-medium">{nextStep.courses.title}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{nextStep.reason}</p>
+                </Link>
+                <Link to="/roadmap">
+                  <Button variant="ghost" size="sm" className="mt-3 w-full">
+                    See full roadmap
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Generate a roadmap built from your measured skills and the MoES catalog.
+                </p>
+                <Link to="/roadmap">
+                  <Button variant="outline" size="sm" className="mt-4 w-full">
+                    Build my roadmap
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
+
+
           <div className="surface-card p-5">
             <h3 className="text-sm font-semibold">Your snapshot</h3>
             <dl className="mt-4 space-y-3 text-sm">
