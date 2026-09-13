@@ -89,6 +89,7 @@ Roles are chosen at sign-up (trainee or trainer). Admin access is granted by an 
 | `/my-learning` | All roles |
 | `/certificates` | All roles |
 | `/assistant` | All roles |
+| `/leaderboard` | All roles |
 | `/profile` | All roles |
 | `/manage-courses` | Trainer, Admin |
 | `/users` | Admin |
@@ -114,6 +115,7 @@ attempts            — assessment attempt records with score and timestamps
 certificates        — issued certificates with verifiable credential IDs
 notifications       — in-app notification queue per user
 audit_logs          — admin-facing record of sensitive actions
+learning_points     — immutable, idempotent ledger of Learning League achievements
 ```
 
 Seed data ships six MoES programmes with modules, lessons, assessments, and MCQ items covering Climate Science, Oceanography, Seismology, Polar Science, Atmospheric Sciences, and Remote Sensing.

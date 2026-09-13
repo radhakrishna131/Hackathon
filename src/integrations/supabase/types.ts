@@ -343,6 +343,39 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_points: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          points: number
+          reference_id: string
+          reference_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          points: number
+          reference_id: string
+          reference_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          points?: number
+          reference_id?: string
+          reference_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed_at: string
@@ -822,6 +855,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_learning_leaderboard: {
+        Args: { p_category?: string | null; p_limit?: number; p_offset?: number; p_period?: string }
+        Returns: {
+          avatar_url: string | null
+          display_name: string
+          improvement_points: number
+          is_current_user: boolean
+          league: string
+          period_points: number
+          rank: number
+          total_points: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
