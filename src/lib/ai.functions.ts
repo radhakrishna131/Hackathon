@@ -1,32 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { callGateway } from "@/lib/ai-gateway.server";
 
-const GATEWAY = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-const MODEL = "gemini-2.5-flash";
-
-type Msg = { role: "system" | "user" | "assistant"; content: string };
-
-async function callGateway(messages: Msg[], jsonMode = false) {
-  const key = process.env["GEMINI_API_KEY"];
-  if (!key) throw new Error("AI is not configured");
-
-  const res = await fetch(GATEWAY, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model: MODEL,
-      messages,
-      ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
-    }),
-  });
-
-  if (res.status === 429) throw new Error("Rate limit reached. Please try again shortly.");
-  if (res.status === 402) throw new Error("AI credits exhausted for this workspace.");
-  if (!res.ok) throw new Error(`AI request failed (${res.status})`);
-
-  const json = (await res.json()) as { choices: { message: { content: string } }[] };
-  return json.choices[0]?.message.content ?? "";
-}
 
 const SYSTEM = `You are the Capacity Connect learning assistant for India's Ministry of Earth Sciences (MoES).
 You help officers and scientists learn oceanography, atmospheric science, seismology, remote sensing,

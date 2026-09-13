@@ -146,6 +146,90 @@ export type Database = {
           },
         ]
       }
+      content_chunks: {
+        Row: {
+          content: string
+          course_id: string | null
+          created_at: string
+          id: string
+          lesson_id: string | null
+          metadata: Json
+          tsv: unknown
+        }
+        Insert: {
+          content: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          metadata?: Json
+          tsv?: unknown
+        }
+        Update: {
+          content?: string
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string | null
+          metadata?: Json
+          tsv?: unknown
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_chunks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_chunks_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_skills: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          importance: string
+          skill_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          importance?: string
+          skill_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          importance?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_skills_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           category: string
@@ -234,6 +318,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      learning_roadmaps: {
+        Row: {
+          created_at: string
+          goal: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       lesson_progress: {
         Row: {
@@ -422,6 +530,7 @@ export type Database = {
           options: Json
           position: number
           prompt: string
+          skill_id: string | null
         }
         Insert: {
           assessment_id: string
@@ -431,6 +540,7 @@ export type Database = {
           options?: Json
           position?: number
           prompt: string
+          skill_id?: string | null
         }
         Update: {
           assessment_id?: string
@@ -440,6 +550,7 @@ export type Database = {
           options?: Json
           position?: number
           prompt?: string
+          skill_id?: string | null
         }
         Relationships: [
           {
@@ -449,7 +560,203 @@ export type Database = {
             referencedRelation: "assessments"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "questions_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      roadmap_items: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          id: string
+          position: number
+          reason: string
+          roadmap_id: string
+          skill_id: string | null
+          status: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          reason?: string
+          roadmap_id: string
+          skill_id?: string | null
+          status?: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          reason?: string
+          roadmap_id?: string
+          skill_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadmap_items_roadmap_id_fkey"
+            columns: ["roadmap_id"]
+            isOneToOne: false
+            referencedRelation: "learning_roadmaps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadmap_items_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_assessment_answers: {
+        Row: {
+          attempt_id: string
+          created_at: string
+          id: string
+          is_correct: boolean
+          question_id: string
+          selected_option: number | null
+        }
+        Insert: {
+          attempt_id: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id: string
+          selected_option?: number | null
+        }
+        Update: {
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          question_id?: string
+          selected_option?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_assessment_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "skill_assessment_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_assessment_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "skill_assessment_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_assessment_attempts: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          score: number
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          score?: number
+          total_questions?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          score?: number
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      skill_assessment_questions: {
+        Row: {
+          correct_option: number
+          created_at: string
+          difficulty: string
+          explanation: string
+          id: string
+          options: Json
+          question: string
+          skill_id: string
+        }
+        Insert: {
+          correct_option?: number
+          created_at?: string
+          difficulty?: string
+          explanation?: string
+          id?: string
+          options?: Json
+          question: string
+          skill_id: string
+        }
+        Update: {
+          correct_option?: number
+          created_at?: string
+          difficulty?: string
+          explanation?: string
+          id?: string
+          options?: Json
+          question?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_assessment_questions_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skills: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -472,6 +779,44 @@ export type Database = {
         }
         Relationships: []
       }
+      user_skills: {
+        Row: {
+          confidence: number
+          created_at: string
+          id: string
+          score: number
+          skill_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          score?: number
+          skill_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          score?: number
+          skill_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -483,6 +828,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      search_content_chunks: {
+        Args: { _limit?: number; _query: string }
+        Returns: {
+          content: string
+          course_id: string
+          lesson_id: string
+          metadata: Json
+          rank: number
+        }[]
       }
     }
     Enums: {

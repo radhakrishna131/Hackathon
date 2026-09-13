@@ -10,8 +10,11 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { applyCourseAssessmentToSkills } from "@/lib/skills.functions";
+
 
 export const Route = createFileRoute("/_authenticated/assessments/$id")({
   head: () => ({
@@ -38,6 +41,8 @@ function AssessmentPage() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const syncSkills = useServerFn(applyCourseAssessmentToSkills);
+
 
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState<{
@@ -128,11 +133,23 @@ function AssessmentPage() {
       }
     }
 
+    // Adaptive loop: course results feed the measurable competency profile.
+    if (course) {
+      try {
+        await syncSkills({ data: { courseId: course.id, score } });
+        qc.invalidateQueries({ queryKey: ["my-skills", user.id] });
+        qc.invalidateQueries({ queryKey: ["roadmap", user.id] });
+      } catch {
+        /* competency sync is non-blocking — the assessment result still stands */
+      }
+    }
+
     setSubmitted({ score, passed, certificateNo });
     qc.invalidateQueries({ queryKey: ["attempts", id, user.id] });
     qc.invalidateQueries({ queryKey: ["certificates", user.id] });
     qc.invalidateQueries({ queryKey: ["notifications", user.id] });
     toast[passed ? "success" : "error"](passed ? `Passed with ${score}%` : `Scored ${score}% — try again`);
+
   };
 
   if (isLoading) {

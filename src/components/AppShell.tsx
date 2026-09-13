@@ -14,6 +14,9 @@ import {
   Waves,
   ScrollText,
   ShieldCheck,
+  Gauge,
+  Route as RouteIcon,
+
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -35,9 +38,12 @@ const NAV: NavItem[] = [
   },
   { to: "/courses", label: "Course Catalog", icon: BookOpen, roles: ["admin", "trainer", "trainee"] },
   { to: "/my-learning", label: "My Learning", icon: GraduationCap, roles: ["trainee", "admin"] },
+  { to: "/skills", label: "Skill Profile", icon: Gauge, roles: ["admin", "trainer", "trainee"] },
+  { to: "/roadmap", label: "Learning Roadmap", icon: RouteIcon, roles: ["admin", "trainer", "trainee"] },
   { to: "/certificates", label: "Certificates", icon: Award, roles: ["trainee", "admin", "trainer"] },
-  { to: "/assistant", label: "AI Assistant", icon: Sparkles, roles: ["admin", "trainer", "trainee"] },
+  { to: "/assistant", label: "Sankalp AI Tutor", icon: Sparkles, roles: ["admin", "trainer", "trainee"] },
   { to: "/analytics", label: "Analytics", icon: BarChart3, roles: ["admin", "trainer"] },
+
   { to: "/manage-courses", label: "Manage Courses", icon: ScrollText, roles: ["admin", "trainer"] },
   { to: "/admin", label: "Admin Console", icon: ShieldCheck, roles: ["admin"] },
   { to: "/users", label: "User Management", icon: Users, roles: ["admin"] },

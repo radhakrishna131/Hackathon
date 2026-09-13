@@ -15,7 +15,110 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchSkills, fetchCourseSkills } from "@/lib/skills";
+
+function SkillsTaught({ courseId }: { courseId: string }) {
+  const qc = useQueryClient();
+  const [skillId, setSkillId] = useState("");
+  const [importance, setImportance] = useState("medium");
+
+  const { data: all = [] } = useQuery({ queryKey: ["skills"], queryFn: fetchSkills });
+  const { data: linked = [] } = useQuery({
+    queryKey: ["course-skills", courseId],
+    queryFn: () => fetchCourseSkills(courseId),
+  });
+
+  const refresh = () => qc.invalidateQueries({ queryKey: ["course-skills", courseId] });
+
+  const add = async () => {
+    if (!skillId) {
+      toast.error("Choose a skill first");
+      return;
+    }
+    const { error } = await supabase
+      .from("course_skills")
+      .insert({ course_id: courseId, skill_id: skillId, importance });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setSkillId("");
+    toast.success("Skill linked to this programme");
+    refresh();
+  };
+
+  const remove = async (id: string) => {
+    const { error } = await supabase.from("course_skills").delete().eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    refresh();
+  };
+
+  const available = all.filter((s) => !linked.some((l) => l.skill_id === s.id));
+
+  return (
+    <div className="rounded-xl border border-border p-4">
+      <h3 className="text-sm font-semibold">Skills taught</h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Linked competencies drive learner skill profiles, gap analysis and roadmap ordering.
+      </p>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {linked.length === 0 && (
+          <span className="text-xs text-muted-foreground">No skills linked yet.</span>
+        )}
+        {linked.map((l) => (
+          <Badge key={l.id} variant="secondary" className="gap-1.5">
+            {l.skills?.name} · {l.importance}
+            <button onClick={() => remove(l.id)} aria-label={`Remove ${l.skills?.name}`}>
+              <Trash2 className="size-3" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        <Select value={skillId} onValueChange={setSkillId}>
+          <SelectTrigger className="sm:w-56">
+            <SelectValue placeholder="Select a skill" />
+          </SelectTrigger>
+          <SelectContent>
+            {available.map((s) => (
+              <SelectItem key={s.id} value={s.id}>
+                {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={importance} onValueChange={setImportance}>
+          <SelectTrigger className="sm:w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button size="sm" onClick={add}>
+          <Plus className="mr-1.5 size-4" /> Link skill
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 
 type Lesson = {
   id: string;
@@ -210,6 +313,10 @@ export function CourseBuilder({ courseId, courseTitle }: { courseId: string; cou
         <DialogHeader>
           <DialogTitle>Modules &amp; lessons — {courseTitle}</DialogTitle>
         </DialogHeader>
+
+        <SkillsTaught courseId={courseId} />
+
+
 
         <form onSubmit={addModule} className="flex gap-2">
           <Input

@@ -20,6 +20,8 @@ import { StatCard } from "@/components/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useRoleGuard } from "@/components/RoleGate";
+import { CompetencyAnalytics } from "@/components/CompetencyAnalytics";
+
 
 export const Route = createFileRoute("/_authenticated/analytics")({
   head: () => ({
@@ -213,6 +215,14 @@ function Analytics() {
           </div>
         </div>
       </div>
+
+      <section className="mt-8">
+        <h2 className="mb-4 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+          Competency analytics
+        </h2>
+        <CompetencyAnalytics />
+      </section>
     </AppShell>
+
   );
 }
